@@ -264,11 +264,40 @@ body {
   <div class="result-content" id="resultContent"></div>
 </div>
 
+<!-- API Key 设置 -->
+<div class="card" id="keyCard">
+  <div class="file-row">
+    <input type="password" id="apiKeyInput" placeholder="输入 Gemini API Key（只需填一次）"
+           style="flex:1;height:34px;border:1px solid var(--sand);border-radius:8px;padding:0 10px;font-size:13px;background:#FAFAF8;outline:none;font-family:inherit;">
+    <button class="btn btn-secondary" onclick="saveKey()" style="padding:8px 14px;font-size:13px;margin-left:8px;">保存</button>
+  </div>
+  <div id="keyStatus" style="font-size:11px;color:var(--text3);margin-top:6px;"></div>
+</div>
+
 <!-- 状态 -->
 <div class="status" id="statusLabel">选择词语文件后点击开始</div>
 
 <script>
-const GEMINI_KEY = "AIzaSyD_XYK3DXeYvnaRy0bS0lg3mEbqrPMDueY";
+let GEMINI_KEY = localStorage.getItem("gemini_key") || "";
+
+function saveKey() {
+  const v = document.getElementById("apiKeyInput").value.trim();
+  if (!v) return;
+  GEMINI_KEY = v;
+  localStorage.setItem("gemini_key", v);
+  document.getElementById("apiKeyInput").value = "";
+  document.getElementById("keyStatus").textContent = "已保存，下次打开自动记住";
+  document.getElementById("keyStatus").style.color = "var(--green-fg)";
+}
+
+// 启动时检查
+if (GEMINI_KEY) {
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("keyStatus").textContent = "已保存，可直接使用拍照批改";
+    document.getElementById("keyStatus").style.color = "var(--green-fg)";
+    document.getElementById("apiKeyInput").placeholder = "已保存（重新输入可更换）";
+  });
+}
 
 let words = [];
 let running = false;
@@ -420,6 +449,7 @@ async function runDictation() {
 // ── 拍照批改 ──
 function gradePhoto() {
   if (!words.length) { alert("请先选择词语文件！"); return; }
+  if (!GEMINI_KEY) { alert("请先在底部输入 Gemini API Key"); return; }
   document.getElementById("photoPicker").click();
 }
 
