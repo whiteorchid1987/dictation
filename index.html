@@ -362,6 +362,15 @@ async function loadWordsFromPhoto(input) {
       { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }
     );
     const result = await resp.json();
+
+    if (result.error) {
+      alert("API错误：" + result.error.message);
+      document.getElementById("fileLabel").textContent = "选择词语来源";
+      document.getElementById("statusLabel").textContent = "识别失败";
+      input.value = "";
+      return;
+    }
+
     const text = result.candidates[0].content.parts[0].text;
     words = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
 
@@ -372,7 +381,7 @@ async function loadWordsFromPhoto(input) {
     document.getElementById("gradeBtn").disabled = false;
     document.getElementById("statusLabel").textContent = "准备就绪";
   } catch (e) {
-    alert("识别失败：" + e.message);
+    alert("识别失败：" + e.message + "\n\n请检查API Key是否正确");
     document.getElementById("fileLabel").textContent = "选择词语来源";
     document.getElementById("statusLabel").textContent = "识别失败，请重试";
   }
