@@ -219,10 +219,12 @@ body {
 <!-- 选文件 -->
 <div class="card">
   <div class="file-row">
-    <span class="file-label" id="fileLabel">点击右侧按钮选择词语文件</span>
-    <button class="btn btn-secondary" onclick="filePicker.click()" style="padding:8px 14px;font-size:13px;">选择文件</button>
+    <span class="file-label" id="fileLabel">选择词语来源</span>
+    <button class="btn btn-secondary" onclick="filePicker.click()" style="padding:8px 14px;font-size:13px;">txt文件</button>
+    <button class="btn btn-outline" onclick="wordPhotoPicker.click()" style="padding:8px 14px;font-size:13px;margin-left:6px;">拍照识词</button>
   </div>
   <input type="file" accept=".txt" class="hidden-input" id="filePicker" onchange="loadFile(this)">
+  <input type="file" accept="image/*" capture="environment" class="hidden-input" id="wordPhotoPicker" onchange="loadWordsFromPhoto(this)">
 </div>
 
 <!-- 设置 -->
@@ -331,6 +333,50 @@ function loadFile(input) {
     document.getElementById("statusLabel").textContent = "准备就绪";
   };
   reader.readAsText(file, "UTF-8");
+}
+
+// ── 拍照识词 ──
+async function loadWordsFromPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!GEMINI_KEY) { alert("请先在底部输入 Gemini API Key"); input.value=""; return; }
+
+  document.getElementById("fileLabel").textContent = "正在识别中...";
+  document.getElementById("statusLabel").textContent = "AI正在识别照片中的词语...";
+
+  try {
+    const base64 = await fileToBase64(file);
+    const prompt = "这是一张包含中文词语/生字的照片（可能是课本、练习册、词语表）。请识别出照片中所有需要默写的中文词语，每个词语单独一行输出。只输出词语本身，不要编号，不要解释，不要标点。如果有拼音，忽略拼音只输出汉字。";
+
+    const payload = {
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: file.type || "image/jpeg", data: base64 } },
+          { text: prompt }
+        ]
+      }]
+    };
+
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }
+    );
+    const result = await resp.json();
+    const text = result.candidates[0].content.parts[0].text;
+    words = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+
+    if (!words.length) { alert("没有识别到词语，请重新拍一张清晰的照片"); return; }
+
+    document.getElementById("fileLabel").textContent = `识别到 ${words.length} 个词语：${words.slice(0,5).join("、")}${words.length > 5 ? "..." : ""}`;
+    document.getElementById("fileLabel").classList.add("active");
+    document.getElementById("gradeBtn").disabled = false;
+    document.getElementById("statusLabel").textContent = "准备就绪";
+  } catch (e) {
+    alert("识别失败：" + e.message);
+    document.getElementById("fileLabel").textContent = "选择词语来源";
+    document.getElementById("statusLabel").textContent = "识别失败，请重试";
+  }
+  input.value = "";
 }
 
 // ── 控制 ──
