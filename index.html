@@ -225,11 +225,22 @@ body {
   </div>
   <input type="file" accept=".txt" class="hidden-input" id="filePicker" onchange="loadFile(this)">
   <input type="file" accept="image/*" class="hidden-input" id="wordPhotoPicker" onchange="loadWordsFromPhoto(this)">
+  <div style="margin-top:8px;">
+    <input type="text" id="ocrHint" placeholder="识别提示（可选）如：只识别高亮的词语"
+           style="width:100%;height:34px;border:1px solid var(--sand);border-radius:8px;padding:0 10px;font-size:12px;background:#FAFAF8;outline:none;font-family:inherit;color:var(--text1);">
+  </div>
 </div>
 
 <!-- 设置 -->
 <div class="card">
   <div class="settings-row">
+    <div class="setting-item">
+      <label>语言</label>
+      <select id="lang" style="height:34px;border:1px solid var(--sand);border-radius:8px;padding:0 8px;font-size:14px;background:#FAFAF8;font-family:inherit;outline:none;">
+        <option value="zh-CN">中文</option>
+        <option value="en-US">English</option>
+      </select>
+    </div>
     <div class="setting-item">
       <label>间隔秒</label>
       <input type="number" id="interval" value="10" min="3" max="30">
@@ -317,10 +328,12 @@ let skipWait = false;
 let abortCtrl = null;
 
 // ── 语音 ──
+function getLang() { return document.getElementById("lang").value; }
+
 function speak(text, rate) {
   return new Promise(resolve => {
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "zh-CN";
+    u.lang = getLang();
     u.rate = rate || parseFloat(document.getElementById("rate").value) || 0.9;
     u.onend = resolve;
     u.onerror = resolve;
@@ -355,7 +368,12 @@ async function loadWordsFromPhoto(input) {
 
   try {
     const base64 = await fileToBase64(file);
-    const prompt = "这是一张包含中文词语/生字的照片（可能是课本、练习册、词语表）。请识别出照片中所有需要默写的中文词语，每个词语单独一行输出。只输出词语本身，不要编号，不要解释，不要标点。如果有拼音，忽略拼音只输出汉字。";
+    const isEn = getLang() === "en-US";
+    const hint = document.getElementById("ocrHint").value.trim();
+    let prompt = isEn
+      ? "This is a photo containing English vocabulary words (possibly from a textbook or word list). Please identify all the English words/phrases that need to be practiced for spelling. Output each word/phrase on a separate line. Only output the words themselves, no numbering, no explanations, no definitions."
+      : "这是一张包含中文词语/生字的照片（可能是课本、练习册、词语表）。请识别出照片中所有需要默写的中文词语，每个词语单独一行输出。只输出词语本身，不要编号，不要解释，不要标点。如果有拼音，忽略拼音只输出汉字。";
+    if (hint) prompt += "\n\n额外要求：" + hint;
 
     const payload = {
       contents: [{
@@ -539,7 +557,10 @@ async function handlePhoto(input) {
   try {
     const base64 = await fileToBase64(file);
     const wordList = words.join("、");
-    const prompt = `这是一个孩子的中文默写作业照片。正确的词语列表是：${wordList}\n\n请你：\n1. 识别照片中孩子手写的每个词语\n2. 逐个对照正确答案，判断对错\n3. 对于写错的字，指出哪里错了\n\n请用以下格式输出：\n第1个：正确答案「XX」→ 孩子写的「XX」→ ✅正确 / ❌错误（错在哪里）\n...\n最后给出总分：对了几个/总共几个`;
+    const isEnGrade = getLang() === "en-US";
+    const prompt = isEnGrade
+      ? `This is a photo of a child's spelling test. The correct word list is: ${wordList}\n\nPlease:\n1. Identify each handwritten word in the photo\n2. Compare with the correct answers\n3. Point out any spelling errors\n\nFormat:\n#1: Correct "${'{'}word${'}'}" → Child wrote "${'{'}word${'}'}" → ✅Correct / ❌Wrong (what's wrong)\n...\nFinal score: X/${words.length} correct`
+      : `这是一个孩子的中文默写作业照片。正确的词语列表是：${wordList}\n\n请你：\n1. 识别照片中孩子手写的每个词语\n2. 逐个对照正确答案，判断对错\n3. 对于写错的字，指出哪里错了\n\n请用以下格式输出：\n第1个：正确答案「XX」→ 孩子写的「XX」→ ✅正确 / ❌错误（错在哪里）\n...\n最后给出总分：对了几个/总共几个`;
 
     const payload = {
       contents: [{
