@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#F8F4EE">
 <link rel="manifest" href="manifest.json">
-<title>中文默写</title>
+<title>EMMA默写神器</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -212,7 +212,7 @@ body {
 <body>
 
 <div class="header">
-  <h1>中文默写</h1>
+  <h1>EMMA默写神器</h1>
   <span class="badge">AI 批改</span>
 </div>
 
@@ -599,7 +599,7 @@ async function handlePhoto(input) {
     const isEnGrade = getLang() === "en-US";
     const prompt = isEnGrade
       ? `This is a photo of a child's spelling test. The correct word list is: ${wordList}\n\nPlease:\n1. Identify each handwritten word in the photo\n2. Compare with the correct answers\n3. Point out any spelling errors\n\nFormat:\n#1: Correct "${'{'}word${'}'}" → Child wrote "${'{'}word${'}'}" → ✅Correct / ❌Wrong (what's wrong)\n...\nFinal score: X/${words.length} correct`
-      : `这是一个孩子的中文默写作业照片。正确的词语列表是：${wordList}\n\n请你：\n1. 识别照片中孩子手写的每个词语\n2. 逐个对照正确答案，判断对错\n3. 对于写错的字，指出哪里错了\n\n请用以下格式输出：\n第1个：正确答案「XX」→ 孩子写的「XX」→ ✅正确 / ❌错误（错在哪里）\n...\n最后给出总分：对了几个/总共几个`;
+      : `这是一个孩子的EMMA默写神器作业照片。正确的词语列表是：${wordList}\n\n请你：\n1. 识别照片中孩子手写的每个词语\n2. 逐个对照正确答案，判断对错\n3. 对于写错的字，指出哪里错了\n\n请用以下格式输出：\n第1个：正确答案「XX」→ 孩子写的「XX」→ ✅正确 / ❌错误（错在哪里）\n...\n最后给出总分：对了几个/总共几个`;
 
     const payload = {
       contents: [{
