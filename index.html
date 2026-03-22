@@ -224,7 +224,7 @@ body {
     <button class="btn btn-outline" onclick="wordPhotoPicker.click()" style="padding:8px 14px;font-size:13px;margin-left:6px;">拍照识词</button>
   </div>
   <input type="file" accept=".txt" class="hidden-input" id="filePicker" onchange="loadFile(this)">
-  <input type="file" accept="image/*" capture="environment" class="hidden-input" id="wordPhotoPicker" onchange="loadWordsFromPhoto(this)">
+  <input type="file" accept="image/*" class="hidden-input" id="wordPhotoPicker" onchange="loadWordsFromPhoto(this)">
 </div>
 
 <!-- 设置 -->
@@ -259,7 +259,7 @@ body {
   <button class="btn btn-outline" id="gradeBtn" onclick="gradePhoto()" disabled>拍照批改</button>
 </div>
 
-<input type="file" accept="image/*" capture="environment" class="hidden-input" id="photoPicker" onchange="handlePhoto(this)">
+<input type="file" accept="image/*" class="hidden-input" id="photoPicker" onchange="handlePhoto(this)">
 
 <!-- 结果 -->
 <div class="card result-card" id="resultCard">
