@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F8F4EE">
+<link rel="manifest" href="manifest.json">
+<title>中文默写</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --bg: #F8F4EE;
+  --card: #FFFFFF;
+  --sand: #E8E0D4;
+  --text1: #2D2B28;
+  --text2: #9B958C;
+  --text3: #C4BDB4;
+  --accent: #D97757;
+  --accent-hover: #C4684A;
+  --sec-btn: #F3EDE5;
+  --sec-hover: #E8E0D4;
+  --badge-bg: #FEF0E8;
+  --green-bg: #E8F5E8;
+  --green-fg: #4A8C5C;
+}
+
+body {
+  font-family: -apple-system, "微软雅黑", "PingFang SC", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text1);
+  min-height: 100vh;
+  padding: 0 20px 20px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── 顶栏 ── */
+.header {
+  padding: 28px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header h1 { font-size: 22px; font-weight: 700; }
+.badge {
+  background: var(--badge-bg);
+  color: var(--accent);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ── 卡片 ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--sand);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+
+/* ── 文件选择 ── */
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.file-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-label.active { color: var(--text1); }
+
+/* ── 设置行 ── */
+.settings-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.setting-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.setting-item label {
+  font-size: 13px;
+  color: var(--text2);
+  white-space: nowrap;
+}
+.setting-item input {
+  width: 52px;
+  height: 34px;
+  border: 1px solid var(--sand);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 14px;
+  background: #FAFAF8;
+  color: var(--text1);
+  outline: none;
+}
+.setting-item input:focus { border-color: var(--accent); }
+
+/* ── 中央区域 ── */
+.center {
+  text-align: center;
+  padding: 32px 0 8px;
+}
+.word-display {
+  font-size: 56px;
+  font-weight: 700;
+  color: var(--accent);
+  min-height: 72px;
+  line-height: 1.2;
+}
+.progress {
+  font-size: 14px;
+  color: var(--text2);
+  margin-top: 6px;
+  min-height: 20px;
+}
+
+/* ── 按钮 ── */
+.btn {
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  touch-action: manipulation;
+  font-family: inherit;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-secondary {
+  background: var(--sec-btn);
+  color: var(--text1);
+}
+.btn-secondary:hover { background: var(--sec-hover); }
+.btn-outline {
+  background: var(--sec-btn);
+  color: var(--accent);
+}
+.btn-outline:hover { background: var(--sec-hover); }
+.btn:disabled {
+  background: var(--sand);
+  color: var(--text3);
+  cursor: default;
+  transform: none;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 0 8px;
+}
+
+/* ── 结果区 ── */
+.result-card {
+  display: none;
+  margin-top: 14px;
+}
+.result-card.show { display: block; }
+.result-content {
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  color: var(--text1);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* ── 底栏 ── */
+.status {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text3);
+  padding: 14px 0 8px;
+}
+
+/* ── 隐藏文件输入 ── */
+.hidden-input { display: none; }
+
+/* ── 拍照区域 ── */
+.photo-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text2);
+  font-size: 13px;
+  padding: 8px 0 0;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>中文默写</h1>
+  <span class="badge">AI 批改</span>
+</div>
+
+<!-- 选文件 -->
+<div class="card">
+  <div class="file-row">
+    <span class="file-label" id="fileLabel">点击右侧按钮选择词语文件</span>
+    <button class="btn btn-secondary" onclick="filePicker.click()" style="padding:8px 14px;font-size:13px;">选择文件</button>
+  </div>
+  <input type="file" accept=".txt" class="hidden-input" id="filePicker" onchange="loadFile(this)">
+</div>
+
+<!-- 设置 -->
+<div class="card">
+  <div class="settings-row">
+    <div class="setting-item">
+      <label>间隔秒</label>
+      <input type="number" id="interval" value="10" min="3" max="30">
+    </div>
+    <div class="setting-item">
+      <label>遍数</label>
+      <input type="number" id="repeat" value="2" min="1" max="5">
+    </div>
+    <div class="setting-item">
+      <label>语速</label>
+      <input type="number" id="rate" value="0.9" min="0.3" max="1.5" step="0.1">
+    </div>
+  </div>
+</div>
+
+<!-- 中央 -->
+<div class="center">
+  <div class="word-display" id="wordDisplay"></div>
+  <div class="progress" id="progressLabel"></div>
+</div>
+
+<!-- 按钮 -->
+<div class="btn-row">
+  <button class="btn btn-primary" id="startBtn" onclick="toggleStart()">开始默写</button>
+  <button class="btn btn-secondary" id="pauseBtn" onclick="togglePause()" disabled>暂停</button>
+  <button class="btn btn-secondary" id="skipBtn" onclick="skipNext()" disabled>下一个</button>
+  <button class="btn btn-outline" id="gradeBtn" onclick="gradePhoto()" disabled>拍照批改</button>
+</div>
+
+<input type="file" accept="image/*" capture="environment" class="hidden-input" id="photoPicker" onchange="handlePhoto(this)">
+
+<!-- 结果 -->
+<div class="card result-card" id="resultCard">
+  <div class="result-content" id="resultContent"></div>
+</div>
+
+<!-- 状态 -->
+<div class="status" id="statusLabel">选择词语文件后点击开始</div>
+
+<script>
+const GEMINI_KEY = "AIzaSyD_XYK3DXeYvnaRy0bS0lg3mEbqrPMDueY";
+
+let words = [];
+let running = false;
+let paused = false;
+let skipWait = false;
+let abortCtrl = null;
+
+// ── 语音 ──
+function speak(text, rate) {
+  return new Promise(resolve => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "zh-CN";
+    u.rate = rate || parseFloat(document.getElementById("rate").value) || 0.9;
+    u.onend = resolve;
+    u.onerror = resolve;
+    speechSynthesis.speak(u);
+  });
+}
+
+// ── 文件 ──
+function loadFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    words = e.target.result.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (!words.length) { alert("文件里没有词语！"); return; }
+    document.getElementById("fileLabel").textContent = `${file.name} — ${words.length} 个词语`;
+    document.getElementById("fileLabel").classList.add("active");
+    document.getElementById("gradeBtn").disabled = false;
+    document.getElementById("statusLabel").textContent = "准备就绪";
+  };
+  reader.readAsText(file, "UTF-8");
+}
+
+// ── 控制 ──
+function toggleStart() {
+  if (running) {
+    running = false; paused = false;
+    speechSynthesis.cancel();
+    resetUI();
+  } else {
+    if (!words.length) { alert("请先选择词语文件！"); return; }
+    running = true; paused = false;
+    document.getElementById("startBtn").textContent = "停止";
+    document.getElementById("pauseBtn").disabled = false;
+    document.getElementById("skipBtn").disabled = false;
+    document.getElementById("resultCard").classList.remove("show");
+    runDictation();
+  }
+}
+
+function togglePause() {
+  if (paused) {
+    paused = false;
+    document.getElementById("pauseBtn").textContent = "暂停";
+    document.getElementById("statusLabel").textContent = "继续中...";
+  } else {
+    paused = true;
+    document.getElementById("pauseBtn").textContent = "继续";
+    document.getElementById("statusLabel").textContent = "已暂停";
+  }
+}
+
+function skipNext() { skipWait = true; }
+
+function resetUI() {
+  document.getElementById("startBtn").textContent = "开始默写";
+  document.getElementById("pauseBtn").disabled = true;
+  document.getElementById("pauseBtn").textContent = "暂停";
+  document.getElementById("skipBtn").disabled = true;
+  document.getElementById("wordDisplay").textContent = "";
+  document.getElementById("progressLabel").textContent = "";
+  document.getElementById("statusLabel").textContent = "已停止";
+}
+
+// ── sleep ──
+function sleep(ms) {
+  return new Promise(resolve => {
+    const start = Date.now();
+    const check = () => {
+      if (!running) { resolve(); return; }
+      if (Date.now() - start >= ms) { resolve(); return; }
+      requestAnimationFrame(check);
+    };
+    check();
+  });
+}
+
+function waitWhilePaused() {
+  return new Promise(resolve => {
+    const check = () => {
+      if (!running || !paused) { resolve(); return; }
+      setTimeout(check, 200);
+    };
+    check();
+  });
+}
+
+// ── 主流程 ──
+async function runDictation() {
+  const interval = parseInt(document.getElementById("interval").value) || 10;
+  const repeatN = parseInt(document.getElementById("repeat").value) || 2;
+  const total = words.length;
+
+  document.getElementById("statusLabel").textContent = "准备开始...";
+  await speak("准备好，默写开始");
+  await sleep(3000);
+
+  for (let i = 0; i < total; i++) {
+    if (!running) break;
+    await waitWhilePaused();
+    if (!running) break;
+
+    document.getElementById("wordDisplay").textContent = "✍";
+    document.getElementById("progressLabel").textContent = `第 ${i+1} / ${total} 个`;
+    document.getElementById("statusLabel").textContent = "正在读...";
+
+    for (let r = 0; r < repeatN; r++) {
+      if (!running) break;
+      await speak(words[i]);
+      if (r < repeatN - 1) await sleep(1000);
+    }
+
+    if (i < total - 1 && running) {
+      skipWait = false;
+      for (let sec = interval; sec > 0; sec--) {
+        if (!running || skipWait) break;
+        await waitWhilePaused();
+        document.getElementById("statusLabel").textContent = `${sec} 秒后读下一个词`;
+        await sleep(1000);
+      }
+      skipWait = false;
+    }
+  }
+
+  if (running) {
+    document.getElementById("wordDisplay").textContent = "";
+    document.getElementById("statusLabel").textContent = "默写结束！可以拍照批改了";
+    await speak("默写结束，检查一遍吧");
+  }
+  running = false;
+  document.getElementById("startBtn").textContent = "开始默写";
+  document.getElementById("pauseBtn").disabled = true;
+  document.getElementById("pauseBtn").textContent = "暂停";
+  document.getElementById("skipBtn").disabled = true;
+}
+
+// ── 拍照批改 ──
+function gradePhoto() {
+  if (!words.length) { alert("请先选择词语文件！"); return; }
+  document.getElementById("photoPicker").click();
+}
+
+async function handlePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  document.getElementById("statusLabel").textContent = "正在识别批改中...";
+  document.getElementById("gradeBtn").disabled = true;
+
+  try {
+    const base64 = await fileToBase64(file);
+    const wordList = words.join("、");
+    const prompt = `这是一个孩子的中文默写作业照片。正确的词语列表是：${wordList}\n\n请你：\n1. 识别照片中孩子手写的每个词语\n2. 逐个对照正确答案，判断对错\n3. 对于写错的字，指出哪里错了\n\n请用以下格式输出：\n第1个：正确答案「XX」→ 孩子写的「XX」→ ✅正确 / ❌错误（错在哪里）\n...\n最后给出总分：对了几个/总共几个`;
+
+    const payload = {
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: file.type || "image/jpeg", data: base64 } },
+          { text: prompt }
+        ]
+      }]
+    };
+
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }
+    );
+    const result = await resp.json();
+    const text = result.candidates[0].content.parts[0].text;
+
+    document.getElementById("resultContent").textContent = text;
+    document.getElementById("resultCard").classList.add("show");
+    document.getElementById("statusLabel").textContent = "批改完成！";
+  } catch (e) {
+    document.getElementById("resultContent").textContent = "批改出错：" + e.message;
+    document.getElementById("resultCard").classList.add("show");
+    document.getElementById("statusLabel").textContent = "批改失败";
+  }
+
+  document.getElementById("gradeBtn").disabled = false;
+  input.value = "";
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── PWA 注册 ──
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
